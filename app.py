@@ -140,23 +140,24 @@ elif page == "Reports":
         
         # Weight-for-Age → Underweight / Normal
         if underweight == "Underweight":
-            st.markdown(f"**Weight:** ❗ **{underweight}**  — (Z = {z_wfa:.2f})")
+            st.markdown(f"**Weight:** ❗ **{underweight}** (Z = {z_wfa:.2f})")
         else:
-            st.markdown(f"**Weight:** ✅ **Normal**  — (Z = {z_wfa:.2f})")
+            st.markdown(f"**Weight:** ✅ **Normal** (Z = {z_wfa:.2f})")
         
         # Length/Height-for-Age → Stunted / Normal
         if stunted == "Stunted":
-            st.markdown(f"**Height:** ❗ **{stunted}**  — (Z = {z_lfa:.2f})")
+            st.markdown(f"**Height:** ❗ **{stunted}** (Z = {z_lfa:.2f})")
         else:
-            st.markdown(f"**Height:** ✅ **Normal**  — (Z = {z_lfa:.2f})")
+            st.markdown(f"**Height:** ✅ **Normal** (Z = {z_lfa:.2f})")
         
         # Weight-for-Length → Wasted / Overweight / Normal
         if wasting_status == "Wasted":
-            st.markdown(f"**Weight vs Height:** ❗ **{wasting_status}**  — (Z = {z_wfl:.2f})")
+            st.markdown(f"**Weight vs Height:** ❗ **{wasting_status}** (Z = {z_wfl:.2f})")
         elif wasting_status == "Overweight":
-            st.markdown(f"**Weight vs Height:** ⚠️ **{wasting_status}**  — (Z = {z_wfl:.2f})")
+            st.markdown(f"**Weight vs Height:** ⚠️ **{wasting_status}** (Z = {z_wfl:.2f})")
         else:
-            st.markdown(f"**Weight vs Height:** ✅ **Normal**  — (Z = {z_wfl:.2f})")
+            st.markdown(f"**Weight vs Height:** ✅ **Normal** (Z = {z_wfl:.2f})")
+
 
 
 
