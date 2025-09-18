@@ -1,47 +1,87 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
+import numpy as np
 import datetime
 
 st.set_page_config(page_title="NourishNav Prototype", layout="wide")
-
 st.title("🍎 NourishNav – Childhood Nutrition Tracker")
 
-# --- Sidebar for navigation ---
+# --- Sidebar ---
 page = st.sidebar.radio("Go to", ["Home", "Growth Tracking", "Feeding Log", "Milestones", "Reports"])
 
-# --- Session storage ---
+# --- Session State ---
 if "growth_data" not in st.session_state:
-    st.session_state.growth_data = pd.DataFrame(columns=["Date", "Weight (kg)", "Height (cm)", "Head Circ (cm)"])
-
+    st.session_state.growth_data = pd.DataFrame(columns=["Date", "Age (months)", "Sex", "Weight (kg)", "Height (cm)", "Head Circ (cm)"])
 if "feeding_log" not in st.session_state:
     st.session_state.feeding_log = pd.DataFrame(columns=["Date", "Feeding Type", "Food/Formula", "Amount"])
-
 if "milestones" not in st.session_state:
     st.session_state.milestones = []
+
+# --- Load WHO datasets ---
+wfa_boys = pd.read_csv("who_weight_age_boys.csv")     # Weight-for-Age (Boys)
+wfa_girls = pd.read_csv("who_weight_age_girls.csv")   # Weight-for-Age (Girls)
+lfa_boys = pd.read_csv("who_length_age_boys.csv")     # Length-for-Age (Boys)
+lfa_girls = pd.read_csv("who_length_age_girls.csv")   # Length-for-Age (Girls)
+wfl_boys = pd.read_csv("who_weight_length_boys.csv")  # Weight-for-Length (Boys)
+wfl_girls = pd.read_csv("who_weight_length_girls.csv")# Weight-for-Length (Girls)
+
+
+# --- Z-score function ---
+def compute_zscore(x, L, M, S):
+    if L != 0:
+        return (((x / M) ** L) - 1) / (L * S)
+    else:
+        return np.log(x / M) / S
+
+
+# --- Classification functions ---
+def classify_weight_for_age(age, sex, weight):
+    ref = wfa_boys if sex == "Boy" else wfa_girls
+    ref_row = ref.iloc[(ref["Age (months)"] - age).abs().argsort()[:1]]
+    z = compute_zscore(weight, ref_row["L"].values[0], ref_row["M"].values[0], ref_row["S"].values[0])
+    return "Underweight" if z < -2 else "Normal", z
+
+def classify_length_for_age(age, sex, height):
+    ref = lfa_boys if sex == "Boy" else lfa_girls
+    ref_row = ref.iloc[(ref["Age (months)"] - age).abs().argsort()[:1]]
+    z = compute_zscore(height, ref_row["L"].values[0], ref_row["M"].values[0], ref_row["S"].values[0])
+    return "Stunted" if z < -2 else "Normal", z
+
+def classify_weight_for_length(length, sex, weight):
+    ref = wfl_boys if sex == "Boy" else wfl_girls
+    ref_row = ref.iloc[(ref["Length (cm)"] - length).abs().argsort()[:1]]
+    z = compute_zscore(weight, ref_row["L"].values[0], ref_row["M"].values[0], ref_row["S"].values[0])
+    if z < -2:
+        return "Wasted", z
+    elif z > 2:
+        return "Overweight", z
+    else:
+        return "Normal", z
+
 
 # --- Pages ---
 if page == "Home":
     st.subheader("Welcome to NourishNav Prototype")
-    st.write("This prototype demonstrates the core features of NourishNav:")
     st.markdown("""
-    - 📈 **Growth Tracking** (weight, height, head circumference with charts)  
-    - 🍲 **Feeding & Diet Logging** (breastfeeding, formula, solids)  
-    - 🧒 **Milestone Tracking** (motor, speech, social development)  
-    - 📊 **Reports & Recommendations**  
+    - 📈 Growth Tracking with WHO classifications  
+    - 🍲 Feeding & Diet Logging  
+    - 🧒 Milestone Tracking  
+    - 📊 Reports with WHO-based nutrition status  
     """)
 
 elif page == "Growth Tracking":
     st.subheader("Growth Tracking")
     date = st.date_input("Date", datetime.date.today())
-    weight = st.number_input("Weight (kg)", 0.0, 50.0, 8.0)
-    height = st.number_input("Height (cm)", 0.0, 120.0, 70.0)
-    head = st.number_input("Head Circumference (cm)", 0.0, 60.0, 45.0)
+    age = st.number_input("Age (months)", 0, 24, 0)
+    sex = st.selectbox("Sex", ["Boy", "Girl"])
+    weight = st.number_input("Weight (kg)", 0.0, 25.0, 3.0)
+    height = st.number_input("Height (cm)", 40.0, 110.0, 50.0)
+    head = st.number_input("Head Circumference (cm)", 0.0, 60.0, 35.0)
 
     if st.button("Add Record"):
         st.session_state.growth_data = pd.concat([
             st.session_state.growth_data,
-            pd.DataFrame([[date, weight, height, head]], columns=st.session_state.growth_data.columns)
+            pd.DataFrame([[date, age, sex, weight, height, head]], columns=st.session_state.growth_data.columns)
         ], ignore_index=True)
 
     st.write("### Growth Data")
@@ -77,7 +117,7 @@ elif page == "Milestones":
         st.write(f"✅ {date}: {m}")
 
 elif page == "Reports":
-    st.subheader("📊 Progress Reports & Recommendations")
+    st.subheader("📊 Growth Classification Report")
     if st.session_state.growth_data.empty:
         st.warning("No growth data yet. Add some records first.")
     else:
@@ -85,10 +125,26 @@ elif page == "Reports":
         st.write("### Latest Growth Record")
         st.json(latest.to_dict())
 
-        # Simple recommendations (placeholder for WHO growth reference)
-        if latest["Weight (kg)"] < 8:
-            st.error("⚠️ Weight is below typical range. Consider consulting a pediatrician.")
-        else:
-            st.success("✅ Growth appears within a healthy range.")
+        # Run classifications
+        underweight, z_wfa = classify_weight_for_age(latest["Age (months)"], latest["Sex"], latest["Weight (kg)"])
+        stunted, z_lfa = classify_length_for_age(latest["Age (months)"], latest["Sex"], latest["Height (cm)"])
+        wasting_status, z_wfl = classify_weight_for_length(latest["Height (cm)"], latest["Sex"], latest["Weight (kg)"])
 
-        st.write("More advanced analysis could compare against WHO Child Growth Standards.")
+        # Display results
+        st.write("### WHO-based Growth Classification")
+        if underweight == "Underweight":
+            st.error(f"⚠️ {underweight} (Weight-for-Age Z = {z_wfa:.2f})")
+        else:
+            st.success(f"✅ Normal (Weight-for-Age Z = {z_wfa:.2f})")
+
+        if stunted == "Stunted":
+            st.error(f"⚠️ {stunted} (Length-for-Age Z = {z_lfa:.2f})")
+        else:
+            st.success(f"✅ Normal (Length-for-Age Z = {z_lfa:.2f})")
+
+        if wasting_status == "Wasted":
+            st.error(f"⚠️ {wasting_status} (Weight-for-Length Z = {z_wfl:.2f})")
+        elif wasting_status == "Overweight":
+            st.warning(f"⚠️ {wasting_status} (Weight-for-Length Z = {z_wfl:.2f})")
+        else:
+            st.success(f"✅ Normal (Weight-for-Length Z = {z_wfl:.2f})")
