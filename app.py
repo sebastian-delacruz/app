@@ -20,10 +20,10 @@ if "milestones" not in st.session_state:
 # --- Load WHO datasets ---
 wfa_boys = pd.read_excel("wfa_boys_0-to-5-years_zscores.xlsx")
 wfa_girls = pd.read_excel("wfa_girls_0-to-5-years_zscores.xlsx")
-lfa_boys = pd.read_excel("lfa_boys_0-to-5-years_zscores.xlsx")
-lfa_girls = pd.read_excel("lfa_girls_0-to-5-years_zscores.xlsx")
-wfl_boys = pd.read_excel("wfl_boys_0-to-5-years_zscores.xlsx")
-wfl_girls = pd.read_excel("wfl_girls_0-to-5-years_zscores.xlsx")
+lhfa_boys = pd.read_excel("lhfa_boys_0-to-2-years_zscores.xlsx")
+lhfa_girls = pd.read_excel("lhfa_girls_0-to-2-years_zscores.xlsx")
+wfl_boys = pd.read_excel("wfl_boys_0-to-2-years_zscores.xlsx")
+wfl_girls = pd.read_excel("wfl_girls_0-to-2-years_zscores.xlsx")
 wfa_boys.rename(columns={wfa_boys.columns[0]: "Age (months)"}, inplace=True)
 wfa_girls.rename(columns={wfa_girls.columns[0]: "Age (months)"}, inplace=True)
 lfa_boys.rename(columns={lfa_boys.columns[0]: "Age (months)"}, inplace=True)
@@ -47,7 +47,7 @@ def classify_weight_for_age(age, sex, weight):
     return "Underweight" if z < -2 else "Normal", z
 
 def classify_length_for_age(age, sex, height):
-    ref = lfa_boys if sex == "Boy" else lfa_girls
+    ref = lhfa_boys if sex == "Boy" else lhfa_girls
     ref_row = ref.iloc[(ref["Age (months)"] - age).abs().argsort()[:1]]
     z = compute_zscore(height, ref_row["L"].values[0], ref_row["M"].values[0], ref_row["S"].values[0])
     return "Stunted" if z < -2 else "Normal", z
@@ -153,6 +153,7 @@ elif page == "Reports":
             st.warning(f"⚠️ {wasting_status} (Weight-for-Length Z = {z_wfl:.2f})")
         else:
             st.success(f"✅ Normal (Weight-for-Length Z = {z_wfl:.2f})")
+
 
 
 
