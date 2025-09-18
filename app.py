@@ -141,18 +141,19 @@ elif page == "Reports":
             st.error(f"⚠️ {underweight} (Weight-for-Age Z = {z_wfa:.2f})")
         else:
             st.success(f"✅ Normal (Weight-for-Age Z = {z_wfa:.2f})")
-
+        
         if stunted == "Stunted":
             st.error(f"⚠️ {stunted} (Length-for-Age Z = {z_lfa:.2f})")
         else:
             st.success(f"✅ Normal (Length-for-Age Z = {z_lfa:.2f})")
-
+        
         if wasting_status == "Wasted":
             st.error(f"⚠️ {wasting_status} (Weight-for-Length Z = {z_wfl:.2f})")
         elif wasting_status == "Overweight":
             st.warning(f"⚠️ {wasting_status} (Weight-for-Length Z = {z_wfl:.2f})")
         else:
             st.success(f"✅ Normal (Weight-for-Length Z = {z_wfl:.2f})")
+
 
 
 
