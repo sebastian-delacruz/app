@@ -18,12 +18,12 @@ if "milestones" not in st.session_state:
     st.session_state.milestones = []
 
 # --- Load WHO datasets ---
-wfa_boys = pd.read_csv("who_weight_age_boys.csv")     # Weight-for-Age (Boys)
-wfa_girls = pd.read_csv("who_weight_age_girls.csv")   # Weight-for-Age (Girls)
-lfa_boys = pd.read_csv("who_length_age_boys.csv")     # Length-for-Age (Boys)
-lfa_girls = pd.read_csv("who_length_age_girls.csv")   # Length-for-Age (Girls)
-wfl_boys = pd.read_csv("who_weight_length_boys.csv")  # Weight-for-Length (Boys)
-wfl_girls = pd.read_csv("who_weight_length_girls.csv")# Weight-for-Length (Girls)
+wfa_boys = pd.read_excel("wfa_boys_0-to-5-years_zscores.xlsx")     # Weight-for-Age (Boys)
+wfa_girls = pd.read_excel("wfa_girls_0-to-5-years_zscores.xlsx")   # Weight-for-Age (Girls)
+lfa_boys = pd.read_excel("lhfa_boys_0-to-2-years_zscores.xlsx")     # Length-for-Age (Boys)
+lfa_girls = pd.read_excel("lhfa_girls_0-to-2-years_zscores.xlsx")   # Length-for-Age (Girls)
+wfl_boys = pd.read_excel("wfl_boys_0-to-2-years_zscores.xlsx")  # Weight-for-Length (Boys)
+wfl_girls = pd.read_excel("wfl_girls_0-to-2-years_zscores.xlsx")# Weight-for-Length (Girls)
 
 
 # --- Z-score function ---
@@ -148,3 +148,4 @@ elif page == "Reports":
             st.warning(f"⚠️ {wasting_status} (Weight-for-Length Z = {z_wfl:.2f})")
         else:
             st.success(f"✅ Normal (Weight-for-Length Z = {z_wfl:.2f})")
+
