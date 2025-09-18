@@ -26,8 +26,8 @@ wfl_boys = pd.read_excel("wfl_boys_0-to-2-years_zscores.xlsx")
 wfl_girls = pd.read_excel("wfl_girls_0-to-2-years_zscores.xlsx")
 wfa_boys.rename(columns={wfa_boys.columns[0]: "Age (months)"}, inplace=True)
 wfa_girls.rename(columns={wfa_girls.columns[0]: "Age (months)"}, inplace=True)
-lfa_boys.rename(columns={lfa_boys.columns[0]: "Age (months)"}, inplace=True)
-lfa_girls.rename(columns={lfa_girls.columns[0]: "Age (months)"}, inplace=True)
+lhfa_boys.rename(columns={lhfa_boys.columns[0]: "Age (months)"}, inplace=True)
+lhfa_girls.rename(columns={lhfa_girls.columns[0]: "Age (months)"}, inplace=True)
 wfl_boys.rename(columns={wfl_boys.columns[0]: "Length (cm)"}, inplace=True)
 wfl_girls.rename(columns={wfl_girls.columns[0]: "Length (cm)"}, inplace=True)
 
@@ -153,6 +153,7 @@ elif page == "Reports":
             st.warning(f"⚠️ {wasting_status} (Weight-for-Length Z = {z_wfl:.2f})")
         else:
             st.success(f"✅ Normal (Weight-for-Length Z = {z_wfl:.2f})")
+
 
 
 
