@@ -127,8 +127,6 @@ elif page == "Reports":
         st.warning("No growth data yet. Add some records first.")
     else:
         latest = st.session_state.growth_data.iloc[-1]
-        st.write("### Latest Growth Record")
-        st.json(latest.to_dict())
 
         # Run classifications
         underweight, z_wfa = classify_weight_for_age(latest["Age (months)"], latest["Sex"], latest["Weight (kg)"])
@@ -157,6 +155,7 @@ elif page == "Reports":
             st.markdown(f"**Weight vs Height:** ⚠️ **{wasting_status}** (Z = {z_wfl:.2f})")
         else:
             st.markdown(f"**Weight vs Height:** ✅ **Normal** (Z = {z_wfl:.2f})")
+
 
 
 
