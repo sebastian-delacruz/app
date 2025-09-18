@@ -137,22 +137,26 @@ elif page == "Reports":
 
         # Display results
         st.write("### WHO-based Growth Classification")
+        
+        # Weight-for-Age → Underweight / Normal
         if underweight == "Underweight":
-            st.error(f"⚠️ {underweight} (Weight-for-Age Z = {z_wfa:.2f})")
+            st.markdown(f"**Weight:** ❗ **{underweight}**  — (Z = {z_wfa:.2f})")
         else:
-            st.success(f"✅ Normal (Weight-for-Age Z = {z_wfa:.2f})")
+            st.markdown(f"**Weight:** ✅ **Normal**  — (Z = {z_wfa:.2f})")
         
+        # Length/Height-for-Age → Stunted / Normal
         if stunted == "Stunted":
-            st.error(f"⚠️ {stunted} (Length-for-Age Z = {z_lfa:.2f})")
+            st.markdown(f"**Height:** ❗ **{stunted}**  — (Z = {z_lfa:.2f})")
         else:
-            st.success(f"✅ Normal (Length-for-Age Z = {z_lfa:.2f})")
+            st.markdown(f"**Height:** ✅ **Normal**  — (Z = {z_lfa:.2f})")
         
+        # Weight-for-Length → Wasted / Overweight / Normal
         if wasting_status == "Wasted":
-            st.error(f"⚠️ {wasting_status} (Weight-for-Length Z = {z_wfl:.2f})")
+            st.markdown(f"**Weight vs Height:** ❗ **{wasting_status}**  — (Z = {z_wfl:.2f})")
         elif wasting_status == "Overweight":
-            st.warning(f"⚠️ {wasting_status} (Weight-for-Length Z = {z_wfl:.2f})")
+            st.markdown(f"**Weight vs Height:** ⚠️ **{wasting_status}**  — (Z = {z_wfl:.2f})")
         else:
-            st.success(f"✅ Normal (Weight-for-Length Z = {z_wfl:.2f})")
+            st.markdown(f"**Weight vs Height:** ✅ **Normal**  — (Z = {z_wfl:.2f})")
 
 
 
