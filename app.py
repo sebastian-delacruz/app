@@ -4,7 +4,7 @@ import numpy as np
 import datetime
 
 st.set_page_config(page_title="NourishNav Prototype", layout="wide")
-st.title("🍎 NourishNav – Childhood Nutrition Tracker")
+st.title("NourishNav: Childhood Nutrition Tracker 🍎")
 
 # --- Sidebar ---
 page = st.sidebar.radio("Go to", ["Growth Tracking", "Reports"])
@@ -115,3 +115,4 @@ elif page == "Reports":
             st.markdown(f"**Weight vs Height:** ⚠️ **{wasting_status}** (Z = {z_wfl:.2f})")
         else:
             st.markdown(f"**Weight vs Height:** ✅ **Normal** (Z = {z_wfl:.2f})")
+
