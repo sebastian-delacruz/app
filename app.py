@@ -7,15 +7,13 @@ st.set_page_config(page_title="NourishNav Prototype", layout="wide")
 st.title("🍎 NourishNav – Childhood Nutrition Tracker")
 
 # --- Sidebar ---
-page = st.sidebar.radio("Go to", ["Home", "Growth Tracking", "Feeding Log", "Milestones", "Reports"])
+page = st.sidebar.radio("Go to", ["Growth Tracking", "Reports"])
 
 # --- Session State ---
 if "growth_data" not in st.session_state:
-    st.session_state.growth_data = pd.DataFrame(columns=["Date", "Age (months)", "Sex", "Weight (kg)", "Height (cm)", "Head Circ (cm)"])
-if "feeding_log" not in st.session_state:
-    st.session_state.feeding_log = pd.DataFrame(columns=["Date", "Feeding Type", "Food/Formula", "Amount"])
-if "milestones" not in st.session_state:
-    st.session_state.milestones = []
+    st.session_state.growth_data = pd.DataFrame(
+        columns=["Date", "Age (months)", "Sex", "Weight (kg)", "Height (cm)", "Head Circ (cm)"]
+    )
 
 # --- Load WHO datasets ---
 wfa_boys = pd.read_excel("wfa_boys_0-to-5-years_zscores.xlsx")
@@ -24,6 +22,8 @@ lhfa_boys = pd.read_excel("lhfa_boys_0-to-2-years_zscores.xlsx")
 lhfa_girls = pd.read_excel("lhfa_girls_0-to-2-years_zscores.xlsx")
 wfl_boys = pd.read_excel("wfl_boys_0-to-2-years_zscores.xlsx")
 wfl_girls = pd.read_excel("wfl_girls_0-to-2-years_zscores.xlsx")
+
+# Rename first column
 wfa_boys.rename(columns={wfa_boys.columns[0]: "Age (months)"}, inplace=True)
 wfa_girls.rename(columns={wfa_girls.columns[0]: "Age (months)"}, inplace=True)
 lhfa_boys.rename(columns={lhfa_boys.columns[0]: "Age (months)"}, inplace=True)
@@ -37,7 +37,6 @@ def compute_zscore(x, L, M, S):
         return (((x / M) ** L) - 1) / (L * S)
     else:
         return np.log(x / M) / S
-
 
 # --- Classification functions ---
 def classify_weight_for_age(age, sex, weight):
@@ -63,18 +62,8 @@ def classify_weight_for_length(length, sex, weight):
     else:
         return "Normal", z
 
-
 # --- Pages ---
-if page == "Home":
-    st.subheader("Welcome to NourishNav Prototype")
-    st.markdown("""
-    - 📈 Growth Tracking with WHO classifications  
-    - 🍲 Feeding & Diet Logging  
-    - 🧒 Milestone Tracking  
-    - 📊 Reports with WHO-based nutrition status  
-    """)
-
-elif page == "Growth Tracking":
+if page == "Growth Tracking":
     st.subheader("Growth Tracking")
     date = st.date_input("Date", datetime.date.today())
     age = st.number_input("Age (months)", 0, 24, 0)
@@ -95,32 +84,6 @@ elif page == "Growth Tracking":
     if not st.session_state.growth_data.empty:
         st.line_chart(st.session_state.growth_data.set_index("Date")[["Weight (kg)", "Height (cm)"]])
 
-elif page == "Feeding Log":
-    st.subheader("Feeding & Diet Log")
-    date = st.date_input("Date", datetime.date.today())
-    ftype = st.selectbox("Feeding Type", ["Breastfeeding", "Formula", "Solid Food"])
-    food = st.text_input("Food / Formula")
-    amount = st.text_input("Amount (ml / g)")
-
-    if st.button("Log Feeding"):
-        st.session_state.feeding_log = pd.concat([
-            st.session_state.feeding_log,
-            pd.DataFrame([[date, ftype, food, amount]], columns=st.session_state.feeding_log.columns)
-        ], ignore_index=True)
-
-    st.write("### Feeding Records")
-    st.dataframe(st.session_state.feeding_log)
-
-elif page == "Milestones":
-    st.subheader("Milestone Tracking")
-    milestone = st.text_input("Enter new milestone (e.g., First words, Crawling)")
-    if st.button("Add Milestone"):
-        st.session_state.milestones.append((datetime.date.today(), milestone))
-
-    st.write("### Milestone Records")
-    for date, m in st.session_state.milestones:
-        st.write(f"✅ {date}: {m}")
-
 elif page == "Reports":
     st.subheader("📊 Growth Classification Report")
     if st.session_state.growth_data.empty:
@@ -135,31 +98,20 @@ elif page == "Reports":
 
         # Display results
         st.write("### WHO-based Growth Classification")
-        
-        # Weight-for-Age → Underweight / Normal
+
         if underweight == "Underweight":
             st.markdown(f"**Weight:** ❗ **{underweight}** (Z = {z_wfa:.2f})")
         else:
             st.markdown(f"**Weight:** ✅ **Normal** (Z = {z_wfa:.2f})")
-        
-        # Length/Height-for-Age → Stunted / Normal
+
         if stunted == "Stunted":
             st.markdown(f"**Height:** ❗ **{stunted}** (Z = {z_lfa:.2f})")
         else:
             st.markdown(f"**Height:** ✅ **Normal** (Z = {z_lfa:.2f})")
-        
-        # Weight-for-Length → Wasted / Overweight / Normal
+
         if wasting_status == "Wasted":
             st.markdown(f"**Weight vs Height:** ❗ **{wasting_status}** (Z = {z_wfl:.2f})")
         elif wasting_status == "Overweight":
             st.markdown(f"**Weight vs Height:** ⚠️ **{wasting_status}** (Z = {z_wfl:.2f})")
         else:
             st.markdown(f"**Weight vs Height:** ✅ **Normal** (Z = {z_wfl:.2f})")
-
-
-
-
-
-
-
-
