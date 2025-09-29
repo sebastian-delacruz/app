@@ -85,61 +85,62 @@ if page == "Growth Tracking":
         st.line_chart(st.session_state.growth_data.set_index("Date")[["Weight (kg)", "Height (cm)"]])
 
 elif page == "Reports":
-st.write("### Caretaker Recommendations")
+    st.write("### Caretaker Recommendations")
+    
+    # --- Underweight (Weight-for-Age) ---
+    if underweight == "Underweight":
+        if z_wfa < -3:
+            st.error("**Severe Underweight (WFA Z < -3):** Child is severely underweight. Seek immediate medical care. Provide frequent feeding with calorie-dense and fortified foods under medical guidance.")
+        else:
+            st.warning("**Moderate Underweight (WFA -3 < Z < -2):** Child is moderately underweight. Ensure frequent meals, introduce calorie-dense foods (e.g., full-fat dairy, eggs, fortified meals), and monitor closely.")
+    
+    # --- Stunted (Length-for-Age) ---
+    if stunted == "Stunted":
+        if z_lfa < -3:
+            st.error("**Severe Stunting (LFA Z < -3):** Height-for-age is severely low. Prioritize high-quality nutrition and seek professional assessment. Provide animal-source foods daily and continue responsive caregiving.")
+        else:
+            st.warning("**Moderate Stunting (LFA -3 < Z < -2):** Child is shorter than expected. Improve dietary diversity, ensure regular feeding, and promote early stimulation and play.")
+    
+    # --- Wasted / Overweight (Weight-for-Length) ---
+    if wasting_status == "Wasted":
+        if z_wfl < -3:
+            st.error("**Severe Wasting (WFL Z < -3):** Severe acute malnutrition. Seek urgent medical treatment immediately (possible hospitalization).")
+        else:
+            st.warning("**Moderate Wasting (WFL -3 < Z < -2):** Thin for height. Provide energy-dense meals, therapeutic or supplementary foods as advised, and monitor for infections.")
+    
+    elif wasting_status == "Overweight":
+        if z_wfl > 3:
+            st.error("**Obese (WFL Z > +3):** High risk of complications. Strictly avoid sugary drinks and fried foods. Encourage vegetables, fruits, whole grains, and daily physical activity.")
+        else:
+            st.warning("**Overweight (WFL +2 < Z < +3):** At risk of obesity. Limit processed snacks and encourage active play and family-wide healthy eating.")
+    
+    # --- Normal (all three are normal) ---
+    if underweight == "Normal" and stunted == "Normal" and wasting_status == "Normal":
+        st.success("**Normal Growth:** Continue exclusive breastfeeding (0–6 months), then diverse complementary feeding. Encourage physical activity, avoid added sugars, and maintain regular health check-ups.")
+    
+    st.write("### General Recommendations for Caretakers")
+    
+    st.markdown("""
+    -  **Feeding Practices**
+      - Exclusive breastfeeding for the first 6 months.
+      - At 6 months, introduce diverse and age-appropriate complementary foods while continuing breastfeeding up to 2 years or beyond.
+    
+    -  **Nutrition**
+      - Ensure dietary diversity: grains, fruits, vegetables, legumes, animal-source foods.
+      - Limit sugary drinks, ultra-processed foods, and added salt.
+    
+    -  **Health Monitoring**
+      - Regular growth monitoring (weight & height every month up to 2 years).
+      - Keep up with immunizations and regular pediatric check-ups.
+    
+    -  **Care & Activity**
+      - Encourage daily active play and interaction.
+      - Ensure safe, responsive caregiving and adequate sleep.
+    
+    -  **Hygiene & Safety**
+      - Practice handwashing with soap before feeding.
+      - Provide safe drinking water and clean food preparation areas.
+    """)
 
-# --- Underweight (Weight-for-Age) ---
-if underweight == "Underweight":
-    if z_wfa < -3:
-        st.error("**Severe Underweight (WFA Z < -3):** Child is severely underweight. Seek immediate medical care. Provide frequent feeding with calorie-dense and fortified foods under medical guidance.")
-    else:
-        st.warning("**Moderate Underweight (WFA -3 < Z < -2):** Child is moderately underweight. Ensure frequent meals, introduce calorie-dense foods (e.g., full-fat dairy, eggs, fortified meals), and monitor closely.")
-
-# --- Stunted (Length-for-Age) ---
-if stunted == "Stunted":
-    if z_lfa < -3:
-        st.error("**Severe Stunting (LFA Z < -3):** Height-for-age is severely low. Prioritize high-quality nutrition and seek professional assessment. Provide animal-source foods daily and continue responsive caregiving.")
-    else:
-        st.warning("**Moderate Stunting (LFA -3 < Z < -2):** Child is shorter than expected. Improve dietary diversity, ensure regular feeding, and promote early stimulation and play.")
-
-# --- Wasted / Overweight (Weight-for-Length) ---
-if wasting_status == "Wasted":
-    if z_wfl < -3:
-        st.error("**Severe Wasting (WFL Z < -3):** Severe acute malnutrition. Seek urgent medical treatment immediately (possible hospitalization).")
-    else:
-        st.warning("**Moderate Wasting (WFL -3 < Z < -2):** Thin for height. Provide energy-dense meals, therapeutic or supplementary foods as advised, and monitor for infections.")
-
-elif wasting_status == "Overweight":
-    if z_wfl > 3:
-        st.error("**Obese (WFL Z > +3):** High risk of complications. Strictly avoid sugary drinks and fried foods. Encourage vegetables, fruits, whole grains, and daily physical activity.")
-    else:
-        st.warning("**Overweight (WFL +2 < Z < +3):** At risk of obesity. Limit processed snacks and encourage active play and family-wide healthy eating.")
-
-# --- Normal (all three are normal) ---
-if underweight == "Normal" and stunted == "Normal" and wasting_status == "Normal":
-    st.success("**Normal Growth:** Continue exclusive breastfeeding (0–6 months), then diverse complementary feeding. Encourage physical activity, avoid added sugars, and maintain regular health check-ups.")
-
-st.write("### General Recommendations for Caretakers")
-
-st.markdown("""
--  **Feeding Practices**
-  - Exclusive breastfeeding for the first 6 months.
-  - At 6 months, introduce diverse and age-appropriate complementary foods while continuing breastfeeding up to 2 years or beyond.
-
--  **Nutrition**
-  - Ensure dietary diversity: grains, fruits, vegetables, legumes, animal-source foods.
-  - Limit sugary drinks, ultra-processed foods, and added salt.
-
--  **Health Monitoring**
-  - Regular growth monitoring (weight & height every month up to 2 years).
-  - Keep up with immunizations and regular pediatric check-ups.
-
--  **Care & Activity**
-  - Encourage daily active play and interaction.
-  - Ensure safe, responsive caregiving and adequate sleep.
-
--  **Hygiene & Safety**
-  - Practice handwashing with soap before feeding.
-  - Provide safe drinking water and clean food preparation areas.
-""")
 
 
