@@ -11,6 +11,7 @@ st.title("NourishNav: Childhood Nutrition Tracker 🍎")
 # OW Strategy: Multi-profile Tracking
 # Stores a list of children and the currently selected child's name
 if "children_profiles" not in st.session_state:
+    # Initial default profile
     st.session_state.children_profiles = {"New Child": pd.DataFrame(columns=["Date", "Age (months)", "Sex", "Weight (kg)", "Height (cm)", "Head Circ (cm)"])}
     st.session_state.current_child = "New Child"
 
@@ -27,20 +28,28 @@ st.session_state.current_child = selected_child
 
 # Input for adding a new child
 new_child_name = st.sidebar.text_input("Add New Child's Name", "")
-if st.sidebar.button("Create Profile") and new_child_name not in st.session_state.children_profiles and new_child_name:
-    st.session_state.children_profiles[new_child_name] = pd.DataFrame(
-        columns=["Date", "Age (months)", "Sex", "Weight (kg)", "Height (cm)", "Head Circ (cm)"]
-    )
-    st.session_state.current_child = new_child_name
-    st.sidebar.success(f"Profile for {new_child_name} created!")
-    st.rerun() # Rerun to update the selection box
+
+# REFINEMENT 1: Strict Profile Naming Check
+if st.sidebar.button("Create Profile"):
+    name_stripped = new_child_name.strip()
+    if not name_stripped:
+        st.sidebar.error("Profile name cannot be empty. Please enter a name.")
+    elif name_stripped in st.session_state.children_profiles:
+        st.sidebar.error(f"Profile '{name_stripped}' already exists.")
+    else:
+        st.session_state.children_profiles[name_stripped] = pd.DataFrame(
+            columns=["Date", "Age (months)", "Sex", "Weight (kg)", "Height (cm)", "Head Circ (cm)"]
+        )
+        st.session_state.current_child = name_stripped
+        st.sidebar.success(f"Profile for {name_stripped} created!")
+        st.rerun() # Rerun to update the selection box
 
 st.sidebar.markdown("---")
 page = st.sidebar.radio("Go to", ["Growth Tracking", "Reports", "Help & FAQ"])
 
 # Retrieve the growth data for the current child
 if st.session_state.current_child not in st.session_state.children_profiles:
-     # This should ideally not happen after the fix above, but for safety:
+     # Fallback for safety
      st.session_state.current_child = child_names[0] if child_names else "New Child"
 
 current_growth_data = st.session_state.children_profiles[st.session_state.current_child]
@@ -105,7 +114,6 @@ def classify_weight_for_length(length, sex, weight):
 if page == "Growth Tracking":
     st.header(f"📈 Growth Tracking for **{st.session_state.current_child}**")
 
-    # OW Strategy: Use current child's data for input
     # If the child profile is new, use default. If data exists, use latest data for initial input guess
     if not current_growth_data.empty:
         latest_record = current_growth_data.iloc[-1]
@@ -137,18 +145,25 @@ if page == "Growth Tracking":
     with col6:
         head = st.number_input("Head Circumference (cm)", 0.0, 60.0, default_head)
 
-    if st.button("➕ Add Growth Record"):
-        if (date, age) in zip(current_growth_data["Date"], current_growth_data["Age (months)"]):
-            st.error("A record for this date/age already exists. Please choose a different date or age.")
-        else:
-            new_record = pd.DataFrame([[date, age, sex, weight, height, head]], columns=current_growth_data.columns)
-            st.session_state.children_profiles[st.session_state.current_child] = pd.concat([
-                current_growth_data,
-                new_record
-            ], ignore_index=True)
-            st.session_state.children_profiles[st.session_state.current_child] = st.session_state.children_profiles[st.session_state.current_child].sort_values(by="Date").reset_index(drop=True)
-            st.success("Growth record added successfully!")
-            st.rerun() # Rerun to refresh the chart/data table
+    # REFINEMENT 2: Prevent adding growth records if profile is the default name
+    is_default_profile = st.session_state.current_child == "New Child"
+
+    if is_default_profile:
+        st.warning("⚠️ Please rename this profile using the 'Add New Child's Name' input in the sidebar before adding a record.")
+        st.button("➕ Add Growth Record", disabled=True)
+    else:
+        if st.button("➕ Add Growth Record"):
+            if (date, age) in zip(current_growth_data["Date"], current_growth_data["Age (months)"]):
+                st.error("A record for this date/age already exists. Please choose a different date or age.")
+            else:
+                new_record = pd.DataFrame([[date, age, sex, weight, height, head]], columns=current_growth_data.columns)
+                st.session_state.children_profiles[st.session_state.current_child] = pd.concat([
+                    current_growth_data,
+                    new_record
+                ], ignore_index=True)
+                st.session_state.children_profiles[st.session_state.current_child] = st.session_state.children_profiles[st.session_state.current_child].sort_values(by="Date").reset_index(drop=True)
+                st.success("Growth record added successfully!")
+                st.rerun() # Rerun to refresh the chart/data table
 
     st.markdown("---")
     st.write(f"### Data for {st.session_state.current_child}")
@@ -188,7 +203,7 @@ elif page == "Reports":
         # Use an f-string for clearer display of classification and Z-score (TS Strategy: Credibility and Clarity)
         st.markdown(f"""
         - **Weight for Age (WFA):** {'❗ **Underweight**' if underweight=='Underweight' else '✅ Normal'} (Z = {z_wfa:.2f})
-        - **Length/Height for Age (LFA):** {'❗ **Stunted**' if stunted=='Stunted' else '✅ Normal'} (Z = {z_lfa:.2f})
+        - **Length/Height for Age (LFA/HFA):** {'❗ **Stunted**' if stunted=='Stunted' else '✅ Normal'} (Z = {z_lfa:.2f})
         - **Weight for Length/Height (WFL/H):** {
             '❗ **Wasted**' if wasting_status == 'Wasted' else
             ('⚠️ **Overweight**' if wasting_status == 'Overweight' else '✅ Normal')
