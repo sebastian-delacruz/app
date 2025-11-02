@@ -1,5 +1,3 @@
-use this
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -350,3 +348,4 @@ elif page == "Help & FAQ":
         """)
     st.markdown("---")
     st.warning("⚠️ **Reminder:** This is a prototype and not a substitute for professional medical advice. Always consult a healthcare professional for diagnosis and treatment.")
+
