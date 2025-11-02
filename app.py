@@ -326,7 +326,7 @@ elif page == "Help & FAQ":
     NourishNav is a childhood nutrition tracker that uses **WHO Growth Standards** to classify your child's growth status, providing immediate, actionable recommendations.
     """)
 
-    st.subheader("How is the Classification Calculated? (TS Strategy: Clarity/Trust)")
+    st.subheader("How is the Classification Calculated?")
     with st.expander("Expand to learn more about Z-Scores"):
         st.markdown("""
         The app uses the World Health Organization (WHO) standards to calculate Z-scores (standard deviations from the median).
@@ -336,16 +336,17 @@ elif page == "Help & FAQ":
         This method is the global standard for assessing child growth.
         """)
 
-    st.subheader("Multi-Profile Tracking (OW Strategy)")
+    st.subheader("Multi-Profile Tracking")
     st.markdown("""
     You can track multiple children or manage profiles for different families (useful for health workers). Use the **Profile Manager** page to create, switch, and delete profiles.
     """)
 
-    st.subheader("Data Privacy (TS Strategy: Data Security)")
+    st.subheader("Data Privacy")
     with st.expander("Expand to learn about our Privacy Policy"):
         st.markdown("""
         **Your Data Security is our Priority.** All data you input is stored locally within this application's session and is not transmitted externally. We adhere to clear protocols to ensure your information remains private and secure.
         """)
     st.markdown("---")
     st.warning("⚠️ **Reminder:** This is a prototype and not a substitute for professional medical advice. Always consult a healthcare professional for diagnosis and treatment.")
+
 
