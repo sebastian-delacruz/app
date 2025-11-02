@@ -2,50 +2,70 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import datetime
+import json # <-- ADDED for data persistence
 
 st.set_page_config(page_title="NourishNav Prototype", layout="wide")
 st.title("NourishNav: Childhood Nutrition Tracker 🍎")
 
+# --- DATA PERSISTENCE FUNCTIONS (TW Strategy: Data Reliability) ---
+
+def serialize_profiles(profiles):
+    """Converts the profiles dictionary (including DataFrames) into a JSON string."""
+    serializable_profiles = {}
+    for name, df in profiles.items():
+        # Convert DataFrame to JSON string using 'split' orientation for full fidelity
+        serializable_profiles[name] = df.to_json(orient='split', date_format='iso')
+    # Use indent for readability in the export file
+    return json.dumps(serializable_profiles, indent=4)
+
+def deserialize_profiles(json_str):
+    """Restores the profiles dictionary from a JSON string."""
+    try:
+        loaded_data = json.loads(json_str)
+        restored_profiles = {}
+        for name, json_df_str in loaded_data.items():
+            # Convert the JSON string back into a DataFrame, ensuring dates are parsed correctly
+            df = pd.read_json(json_df_str, orient='split')
+            # Ensure the Date column is datetime and other numerics are correct
+            if 'Date' in df.columns:
+                df['Date'] = pd.to_datetime(df['Date']).dt.date
+            for col in ["Age (months)", "Weight (kg)", "Height (cm)", "Head Circ (cm)"]:
+                 if col in df.columns:
+                     df[col] = pd.to_numeric(df[col], errors='coerce')
+                     
+            restored_profiles[name] = df
+        return restored_profiles
+    except Exception as e:
+        st.error(f"Error loading profiles: Invalid format. Please ensure you pasted the exact data. Error: {e}")
+        return None
+
 # --- TOWS STRATEGY INTEGRATION ---
 
 # OW Strategy: Multi-profile Tracking
-# Stores a list of children and the currently selected child's name
 if "children_profiles" not in st.session_state:
-    # Use a descriptive placeholder profile that cannot be used for data entry
     st.session_state.children_profiles = {"Select/Create Profile": pd.DataFrame(columns=["Date", "Age (months)", "Sex", "Weight (kg)", "Height (cm)", "Head Circ (cm)"])}
     st.session_state.current_child = "Select/Create Profile"
 
 # --- Sidebar ---
-st.sidebar.header("Active Child Profile")
+st.sidebar.header("👶 Active Child Profile")
 
-# Dropdown to select existing child
 child_names = list(st.session_state.children_profiles.keys())
 selected_child = st.sidebar.selectbox("Profile", child_names, index=child_names.index(st.session_state.current_child))
 
-# Update the session state with the selected child
 st.session_state.current_child = selected_child
 
-# Check if the current child is the placeholder
 is_placeholder_profile = st.session_state.current_child == "Select/Create Profile"
 if is_placeholder_profile:
     st.sidebar.warning("Go to Profile Manager to create a new profile.")
 
 st.sidebar.markdown("---")
-# Set "Profile Manager" as the default landing page
 page = st.sidebar.radio("Go to", ["Profile Manager", "Growth Tracking", "Reports", "Help & FAQ"])
-
-# Retrieve the growth data for the current child
-if st.session_state.current_child not in st.session_state.children_profiles:
-     # Fallback for safety
-     st.session_state.current_child = child_names[0] if child_names else "Select/Create Profile"
 
 current_growth_data = st.session_state.children_profiles[st.session_state.current_child]
 
 
-# --- Load WHO datasets (Simulated - assuming files exist) ---
+# --- Load WHO datasets (Simulated - with robust fallback) ---
 try:
-    # NOTE: In a real environment, you'd ensure these files are available.
-    # Placeholder for file loading, assuming files are available
     @st.cache_data
     def load_who_data():
         try:
@@ -58,14 +78,23 @@ try:
             
             return wfa_boys, wfa_girls, lhfa_boys, lhfa_girls, wfl_boys, wfl_girls
         except FileNotFoundError:
-            return None, None, None, None, None, None
+            # Fallback: Create dummy dataframes if files are missing
+            dummy_cols_age = ["Age (months)", "L", "M", "S", "SD3neg", "SD2neg", "SD1neg", "SD0", "SD1", "SD2", "SD3"]
+            dummy_cols_len = ["Length (cm)", "L", "M", "S", "SD3neg", "SD2neg", "SD1neg", "SD0", "SD1", "SD2", "SD3"]
+            
+            # Use random data to simulate WHO data structure
+            wfa_boys = pd.DataFrame(np.random.rand(25, 11), columns=dummy_cols_age).assign(**{"Age (months)": np.arange(0, 25)})
+            wfa_girls = pd.DataFrame(np.random.rand(25, 11), columns=dummy_cols_age).assign(**{"Age (months)": np.arange(0, 25)})
+            lhfa_boys = pd.DataFrame(np.random.rand(25, 11), columns=dummy_cols_age).assign(**{"Age (months)": np.arange(0, 25)})
+            lhfa_girls = pd.DataFrame(np.random.rand(25, 11), columns=dummy_cols_age).assign(**{"Age (months)": np.arange(0, 25)})
+            wfl_boys = pd.DataFrame(np.random.rand(25, 11), columns=dummy_cols_len).assign(**{"Length (cm)": np.linspace(40, 110, 25)})
+            wfl_girls = pd.DataFrame(np.random.rand(25, 11), columns=dummy_cols_len).assign(**{"Length (cm)": np.linspace(40, 110, 25)})
+            
+            st.warning("WHO growth standards files not found. Using simulated data for classification. Results may be inaccurate.")
+            return wfa_boys, wfa_girls, lhfa_boys, lhfa_girls, wfl_boys, wfl_girls
 
     data_files = load_who_data()
-    if all(df is None for df in data_files):
-        st.error("Error: WHO growth standards files not found. The application will not function.")
-        st.stop()
-    else:
-        wfa_boys, wfa_girls, lhfa_boys, lhfa_girls, wfl_boys, wfl_girls = data_files
+    wfa_boys, wfa_girls, lhfa_boys, lhfa_girls, wfl_boys, wfl_girls = data_files
 
 
 except Exception as e:
@@ -80,7 +109,7 @@ def compute_zscore(x, L, M, S):
     else:
         return np.log(x / M) / S
 
-# --- Classification functions ---
+# --- Classification functions (Logic remains the same) ---
 def classify_weight_for_age(age, sex, weight):
     ref = wfa_boys if sex == "Boy" else wfa_girls
     ref_row = ref.iloc[(ref["Age (months)"] - age).abs().argsort()[:1]]
@@ -126,7 +155,6 @@ def create_profile(name):
 def delete_profile(name):
     if name in st.session_state.children_profiles and name != "Select/Create Profile":
         del st.session_state.children_profiles[name]
-        # Switch to the placeholder profile after deletion
         st.session_state.current_child = "Select/Create Profile"
         st.warning(f"Profile for **{name}** deleted.")
         st.rerun()
@@ -153,7 +181,7 @@ if page == "Profile Manager":
     if not valid_profiles:
         st.info("No active profiles yet. Use the section above to create your first child's profile!")
     else:
-        st.markdown(f"**Currently Active:** {st.session_state.current_child}")
+        st.markdown(f"**Currently Active:** **{st.session_state.current_child}**")
         
         for name in valid_profiles:
             col_name, col_records, col_switch, col_delete = st.columns([2, 1, 1, 1])
@@ -173,6 +201,44 @@ if page == "Profile Manager":
                 if st.button("Delete", key=f"delete_{name}"):
                     delete_profile(name)
     
+    st.markdown("---")
+    st.subheader("💾 Import / Export Data (Save & Load)") # NEW SECTION
+    
+    col_exp, col_imp = st.columns(2)
+    
+    # Export Section
+    with col_exp:
+        exported_json = serialize_profiles(st.session_state.children_profiles)
+        st.download_button(
+            label="⬇️ Export Data (JSON)",
+            data=exported_json,
+            file_name="nourishnav_profiles_backup.json",
+            mime="application/json",
+            help="Download this file to save your profiles locally. Use this file to restore data later."
+        )
+        st.caption("Tip: You can also copy the content below.")
+        st.code(exported_json, language='json')
+        
+    # Import Section
+    with col_imp:
+        imported_json = st.text_area(
+            "Paste Exported JSON Data Here to Load", 
+            key="import_json_area", 
+            height=250, 
+            placeholder="Paste the entire JSON content from your backup file here."
+        )
+        if st.button("⬆️ Load Profiles"):
+            if imported_json:
+                restored_profiles = deserialize_profiles(imported_json)
+                if restored_profiles is not None:
+                    st.session_state.children_profiles = restored_profiles
+                    
+                    if st.session_state.current_child not in restored_profiles:
+                        st.session_state.current_child = list(restored_profiles.keys())[0] if restored_profiles else "Select/Create Profile"
+                        
+                    st.success("Profiles loaded successfully! Please select an active profile in the sidebar.")
+                    st.rerun()
+
     
 elif page == "Growth Tracking":
     if is_placeholder_profile:
@@ -318,7 +384,7 @@ elif page == "Reports":
 
 elif page == "Help & FAQ":
     # OW Strategy: Comprehensive Help Center/FAQ section for improved accessibility and usability.
-    st.header("Help Center & Frequently Asked Questions")
+    st.header("❓ Help Center & Frequently Asked Questions")
 
     st.markdown("---")
     st.subheader("What is NourishNav?")
@@ -326,7 +392,7 @@ elif page == "Help & FAQ":
     NourishNav is a childhood nutrition tracker that uses **WHO Growth Standards** to classify your child's growth status, providing immediate, actionable recommendations.
     """)
 
-    st.subheader("How is the Classification Calculated?")
+    st.subheader("How is the Classification Calculated? (TS Strategy: Clarity/Trust)")
     with st.expander("Expand to learn more about Z-Scores"):
         st.markdown("""
         The app uses the World Health Organization (WHO) standards to calculate Z-scores (standard deviations from the median).
@@ -336,17 +402,21 @@ elif page == "Help & FAQ":
         This method is the global standard for assessing child growth.
         """)
 
-    st.subheader("Multi-Profile Tracking")
+    st.subheader("Multi-Profile Tracking (OW Strategy)")
     st.markdown("""
     You can track multiple children or manage profiles for different families (useful for health workers). Use the **Profile Manager** page to create, switch, and delete profiles.
     """)
+    
+    st.subheader("Data Persistence (TW Strategy: Data Reliability)")
+    with st.expander("Expand to learn how to save your data"):
+        st.markdown("""
+        Since this is a web app, data must be saved manually to persist across browser sessions/refreshes. Go to the **Profile Manager** page, use the **Export Data** button to download a backup file, and use the **Load Profiles** function to restore your data later.
+        """)
 
-    st.subheader("Data Privacy")
+    st.subheader("Data Privacy (TS Strategy: Data Security)")
     with st.expander("Expand to learn about our Privacy Policy"):
         st.markdown("""
         **Your Data Security is our Priority.** All data you input is stored locally within this application's session and is not transmitted externally. We adhere to clear protocols to ensure your information remains private and secure.
         """)
     st.markdown("---")
     st.warning("⚠️ **Reminder:** This is a prototype and not a substitute for professional medical advice. Always consult a healthcare professional for diagnosis and treatment.")
-
-
