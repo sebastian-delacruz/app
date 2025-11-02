@@ -16,7 +16,7 @@ if "children_profiles" not in st.session_state:
     st.session_state.current_child = "Select/Create Profile"
 
 # --- Sidebar ---
-st.sidebar.header("👶 Active Child Profile")
+st.sidebar.header("Active Child Profile")
 
 # Dropdown to select existing child
 child_names = list(st.session_state.children_profiles.keys())
@@ -348,3 +348,4 @@ elif page == "Help & FAQ":
         """)
     st.markdown("---")
     st.warning("⚠️ **Reminder:** This is a prototype and not a substitute for professional medical advice. Always consult a healthcare professional for diagnosis and treatment.")
+
