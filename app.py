@@ -11,7 +11,6 @@ st.title("NourishNav: Childhood Nutrition Tracker 🍎")
 # OW Strategy: Multi-profile Tracking
 # Stores a list of children and the currently selected child's name
 if "children_profiles" not in st.session_state:
-    # Use a descriptive placeholder profile that cannot be used for data entry
     st.session_state.children_profiles = {"Select/Create Profile": pd.DataFrame(columns=["Date", "Age (months)", "Sex", "Weight (kg)", "Height (cm)", "Head Circ (cm)"])}
     st.session_state.current_child = "Select/Create Profile"
 
@@ -348,4 +347,5 @@ elif page == "Help & FAQ":
         """)
     st.markdown("---")
     st.warning("⚠️ **Reminder:** This is a prototype and not a substitute for professional medical advice. Always consult a healthcare professional for diagnosis and treatment.")
+
 
