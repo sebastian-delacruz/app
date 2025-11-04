@@ -134,7 +134,7 @@ def delete_profile(name):
 # --- Pages ---
 
 if page == "Profile Manager":
-    st.header("👤 Profile Manager: Create, Select, or Delete Profiles")
+    st.header("Profile Manager: Create, Select, or Delete Profiles")
     st.markdown("---")
     
     col_create, col_spacer = st.columns([1, 2])
@@ -348,4 +348,5 @@ elif page == "Help & FAQ":
         """)
     st.markdown("---")
     st.warning("⚠️ **Reminder:** This is a prototype and not a substitute for professional medical advice. Always consult a healthcare professional for diagnosis and treatment.")
+
 
